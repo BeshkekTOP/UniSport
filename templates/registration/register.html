@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация - UniSport{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-3">Регистрация пользователя</h1>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-success">Создать аккаунт</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

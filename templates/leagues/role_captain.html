@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Капитан - UniSport{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Панель капитана</h1>
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h2 class="h5">Мои команды</h2>
+        <ul class="mb-0">
+            {% for team in captain_teams %}
+                <li>
+                    {{ team.name }} ({{ team.get_faculty_display }}) - игроков: {{ team.players.count }}
+                </li>
+            {% empty %}
+                <li class="text-muted">Команды не назначены.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="h5">Предстоящие матчи моих команд</h2>
+        <ul class="mb-0">
+            {% for match in team_matches %}
+                <li>{{ match.date_time|date:"d.m.Y H:i" }} - {{ match.home_team }} vs {{ match.away_team }}</li>
+            {% empty %}
+                <li class="text-muted">Матчей нет.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

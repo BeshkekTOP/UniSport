@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Администратор - UniSport{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Панель администратора</h1>
+<div class="row g-3">
+    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Команд</div><div class="h4">{{ total_teams }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Лиг</div><div class="h4">{{ total_leagues }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Матчей</div><div class="h4">{{ total_matches }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Пользователей</div><div class="h4">{{ total_users }}</div></div></div></div>
+</div>
+<div class="mt-4">
+    <a href="/admin/" class="btn btn-dark">Открыть Django Admin</a>
+</div>
+{% endblock %}
