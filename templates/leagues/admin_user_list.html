@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Пользователи — UniSport{% endblock %}
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">Пользователи</h1>
+    <div class="d-flex gap-2">
+        <a href="{% url 'leagues:admin_user_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Добавить</a>
+        <a href="{% url 'leagues:role_admin' %}" class="btn btn-sm btn-outline-secondary">Панель администратора</a>
+    </div>
+</div>
+<form class="card mb-4" method="get">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small">Поиск</label>
+            <input type="text" name="q" class="form-control form-control-sm" value="{{ request.GET.q }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Роль</label>
+            <select name="role" class="form-select form-select-sm">
+                <option value="">Все</option>
+                {% for val, label in role_choices %}
+                    <option value="{{ val }}" {% if request.GET.role == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">Фильтр</button>
+        </div>
+    </div>
+</form>
+<div class="table-responsive card">
+    <table class="table mb-0">
+        <thead><tr><th>Пользователь</th><th>Роль</th><th></th></tr></thead>
+        <tbody>
+        {% for u in users_list %}
+            <tr>
+                <td>{{ u.username }}{% if u.get_full_name %} <span class="text-muted">({{ u.get_full_name }})</span>{% endif %}</td>
+                <td>{% if u.profile %}{{ u.profile.get_role_display }}{% else %}—{% endif %}</td>
+                <td class="text-end">
+                    <a href="{% url 'leagues:admin_user_edit' u.pk %}" class="btn btn-sm btn-outline-primary">Изменить</a>
+                    <form method="post" action="{% url 'leagues:admin_user_delete' u.pk %}" class="d-inline" onsubmit="return confirm('Удалить пользователя?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3" class="text-muted">Нет пользователей</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if is_paginated %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&role={{ request.GET.role }}">Назад</a></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&role={{ request.GET.role }}">Далее</a></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}

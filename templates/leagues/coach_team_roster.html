@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Состав: {{ team.name }} — UniSport{% endblock %}
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">Состав: {{ team.name }}</h1>
+    <a href="{% url 'leagues:team_detail' team.pk %}" class="btn btn-sm btn-outline-secondary">К команде</a>
+</div>
+{% if leagues %}
+<form method="get" class="mb-3">
+    <label for="leagueFilter" class="form-label small text-muted mb-1">Лига для набора игроков</label>
+    <select id="leagueFilter" name="league" class="form-select form-select-sm" style="max-width: 420px;" onchange="this.form.submit()">
+        {% for l in leagues %}
+            <option value="{{ l.pk }}" {% if league and league.pk == l.pk %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+    </select>
+</form>
+{% endif %}
+{% if league %}
+<p class="text-muted small">Лига: {{ league }}. Доступны только игроки без команды в этой лиге.</p>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Основной состав</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for p in main_squad %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <a href="{% url 'leagues:player_detail' p.pk %}">{{ p.get_full_name|default:p.username }}</a>
+                            {% if p == team.captain %}<span class="badge bg-warning text-dark ms-1">Тренер</span>{% endif %}
+                        </span>
+                        {% if p != team.captain %}
+                        <div class="d-flex gap-1">
+                        <form method="post" class="m-0">
+                            {% csrf_token %}
+                            {% if league %}<input type="hidden" name="league" value="{{ league.pk }}">{% endif %}
+                            <input type="hidden" name="toggle_reserve" value="1">
+                            <input type="hidden" name="player_id" value="{{ p.pk }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">В запас</button>
+                        </form>
+                        <form method="post" class="m-0" onsubmit="return confirm('Исключить игрока?');">
+                            {% csrf_token %}
+                            {% if league %}<input type="hidden" name="league" value="{{ league.pk }}">{% endif %}
+                            <input type="hidden" name="remove_player" value="1">
+                            <input type="hidden" name="player_id" value="{{ p.pk }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Исключить</button>
+                        </form>
+                        </div>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Нет игроков</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Запас</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for p in reserve_squad %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <a href="{% url 'leagues:player_detail' p.pk %}">{{ p.get_full_name|default:p.username }}</a>
+                        </span>
+                        <div class="d-flex gap-1">
+                            <form method="post" class="m-0">
+                                {% csrf_token %}
+                                {% if league %}<input type="hidden" name="league" value="{{ league.pk }}">{% endif %}
+                                <input type="hidden" name="toggle_reserve" value="1">
+                                <input type="hidden" name="player_id" value="{{ p.pk }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">В основу</button>
+                            </form>
+                            <form method="post" class="m-0" onsubmit="return confirm('Исключить игрока?');">
+                                {% csrf_token %}
+                                {% if league %}<input type="hidden" name="league" value="{{ league.pk }}">{% endif %}
+                                <input type="hidden" name="remove_player" value="1">
+                                <input type="hidden" name="player_id" value="{{ p.pk }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Исключить</button>
+                            </form>
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Нет игроков в запасе</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Свободные игроки (в лиге нет команды)</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for p in free_players %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{% url 'leagues:player_detail' p.pk %}">{{ p.get_full_name|default:p.username }}</a>
+                        <form method="post" class="m-0">
+                            {% csrf_token %}
+                            {% if league %}<input type="hidden" name="league" value="{{ league.pk }}">{% endif %}
+                            <input type="hidden" name="add_player" value="1">
+                            <input type="hidden" name="player_id" value="{{ p.pk }}">
+                            <button type="submit" class="btn btn-sm btn-primary">В команду</button>
+                        </form>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Нет свободных игроков</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

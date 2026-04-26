@@ -1,29 +1,115 @@
+{% load static %}
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-bs-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#070a0f">
     <title>{% block title %}UniSport{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{% static 'css/unisport.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+<body class="us-body d-flex flex-column min-vh-100">
+<div class="us-bg" aria-hidden="true"></div>
+
+<nav class="navbar navbar-expand-lg us-navbar sticky-top">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'leagues:home' %}">UniSport</a>
-        <div class="navbar-nav ms-auto">
-            {% if user.is_authenticated %}
-                <a class="nav-link" href="{% url 'leagues:league_list' %}">Лиги</a>
-                <a class="nav-link" href="{% url 'leagues:match_schedule' %}">Матчи</a>
-                <a class="nav-link" href="{% url 'logout' %}">Выйти</a>
-            {% else %}
-                <a class="nav-link" href="{% url 'login' %}">Войти</a>
-                <a class="nav-link" href="{% url 'leagues:register' %}">Регистрация</a>
-            {% endif %}
+        <a class="navbar-brand" href="{% url 'leagues:home' %}">
+            <i class="bi bi-trophy-fill"></i> UniSport
+        </a>
+        <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Меню">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="{% url 'leagues:league_list' %}">Лиги</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'leagues:match_schedule' %}">Расписание</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="usCatalogDd" role="button" data-bs-toggle="dropdown" aria-expanded="false">Каталог</a>
+                    <ul class="dropdown-menu us-dropdown" aria-labelledby="usCatalogDd">
+                        <li><a class="dropdown-item" href="{% url 'leagues:player_list' %}">Игроки</a></li>
+                        <li><a class="dropdown-item" href="{% url 'leagues:coach_list' %}">Тренеры</a></li>
+                        <li><a class="dropdown-item" href="{% url 'leagues:team_browse' %}">Команды</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'leagues:about' %}">О проекте</a></li>
+                {% if user.is_authenticated and user_role == "ADMIN" %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="usAdminDd" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-shield-lock"></i> Админ</a>
+                    <ul class="dropdown-menu us-dropdown" aria-labelledby="usAdminDd">
+                        <li><a class="dropdown-item" href="{% url 'leagues:league_list' %}">Лиги</a></li>
+                        <li><a class="dropdown-item" href="{% url 'leagues:match_schedule' %}">Расписание</a></li>
+                        <li><a class="dropdown-item" href="{% url 'leagues:admin_teams' %}">Команды</a></li>
+                        <li><a class="dropdown-item" href="{% url 'leagues:admin_users' %}">Пользователи</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'leagues:role_admin' %}"><strong>Панель администратора</strong></a></li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            <form class="d-flex us-search-form me-lg-3 mb-2 mb-lg-0" action="{% url 'leagues:search' %}" method="get" role="search">
+                <input class="form-control form-control-sm" type="search" name="q" placeholder="Поиск лиг, команд…" aria-label="Поиск" value="{{ request.GET.q|default:'' }}">
+            </form>
+            <ul class="navbar-nav align-items-lg-center gap-lg-1">
+                <li class="nav-item">
+                    <button type="button" class="us-theme-toggle" id="usThemeToggle" title="Тема" aria-label="Переключить тему">
+                        <i class="bi bi-sun-fill" aria-hidden="true"></i>
+                    </button>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'leagues:notifications' %}">
+                            <i class="bi bi-bell"></i>
+                            {% if unread_count %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'leagues:profile' %}"><i class="bi bi-person-circle"></i> {{ user.username }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Выйти</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Войти</a></li>
+                    <li class="nav-item"><a class="btn btn-sm btn-primary ms-lg-1" href="{% url 'leagues:register' %}">Регистрация</a></li>
+                {% endif %}
+            </ul>
         </div>
     </div>
 </nav>
-<main class="container pb-4">
+
+<main class="container pb-5 flex-grow-1 us-main">
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="alert alert-{% if msg.tags == 'error' %}danger{% elif msg.tags == 'debug' %}secondary{% else %}{{ msg.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
     {% block content %}{% endblock %}
 </main>
+
+<footer class="us-footer mt-auto">
+    <div class="container us-footer-inner">
+        <span>&copy; 2026 UniSport — студенческие спортивные лиги</span>
+        <span>
+            <a href="{% url 'leagues:league_list' %}">Лиги</a>
+            · <a href="{% url 'leagues:match_schedule' %}">Расписание</a>
+            · <a href="{% url 'leagues:about' %}">О проекте</a>
+        </span>
+    </div>
+</footer>
+
+<button type="button" class="us-scroll-top" id="usScrollTop" aria-label="Наверх">
+    <i class="bi bi-chevron-up"></i>
+</button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/unisport.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

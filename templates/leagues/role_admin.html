@@ -1,16 +1,95 @@
 {% extends "base.html" %}
-
-{% block title %}Администратор - UniSport{% endblock %}
+{% block title %}Администратор — UniSport{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4">Панель администратора</h1>
-<div class="row g-3">
-    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Команд</div><div class="h4">{{ total_teams }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Лиг</div><div class="h4">{{ total_leagues }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Матчей</div><div class="h4">{{ total_matches }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Пользователей</div><div class="h4">{{ total_users }}</div></div></div></div>
+<div class="us-page-head mb-4">
+    <h1 class="h3 mb-0">Панель администратора</h1>
 </div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="h4">{{ total_teams }}</div>
+                <small class="text-muted">Команд</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="h4">{{ total_leagues }}</div>
+                <small class="text-muted">Лиг</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="h4">{{ total_matches }}</div>
+                <small class="text-muted">Матчей</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="h4">{{ total_users }}</div>
+                <small class="text-muted">Пользователей</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><a href="{% url 'leagues:league_create' %}" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Создать лигу</a></div>
+    <div class="col-md-4"><a href="{% url 'leagues:team_create' %}" class="btn btn-outline-primary w-100"><i class="bi bi-plus-lg"></i> Создать команду</a></div>
+    <div class="col-md-4"><a href="{% url 'leagues:match_create' %}" class="btn btn-outline-primary w-100"><i class="bi bi-plus-lg"></i> Создать матч</a></div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6"><a href="{% url 'leagues:export_matches' %}" class="btn btn-outline-secondary w-100"><i class="bi bi-download"></i> Экспорт матчей (CSV)</a></div>
+    <div class="col-md-6"><a href="{% url 'leagues:export_teams' %}" class="btn btn-outline-secondary w-100"><i class="bi bi-download"></i> Экспорт команд (CSV)</a></div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><a href="{% url 'leagues:admin_logs' %}" class="btn btn-outline-warning w-100 text-dark"><i class="bi bi-activity"></i> Логи действий</a></div>
+    <div class="col-md-4"><a href="{% url 'leagues:admin_analytics' %}" class="btn btn-outline-info w-100"><i class="bi bi-graph-up"></i> Аналитические отчёты</a></div>
+    <div class="col-md-4"><a href="{% url 'leagues:admin_backup' %}" class="btn btn-outline-light w-100"><i class="bi bi-database-down"></i> Backup БД</a></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Все лиги</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for l in leagues %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <a href="{% url 'leagues:league_detail' l.pk %}">{{ l.get_sport_display }} ({{ l.season }})</a>
+                        <span class="badge {% if l.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">{{ l.get_status_display }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Последние результаты</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for m in recent_matches %}
+                    <li class="list-group-item">
+                        <a href="{% url 'leagues:match_detail' m.pk %}">{{ m.home_team }} {{ m.score_home }}:{{ m.score_away }} {{ m.away_team }}</a>
+                        <small class="text-muted d-block">{{ m.date_time|date:"d.m.Y" }}</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Нет завершённых матчей</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
 <div class="mt-4">
-    <a href="/admin/" class="btn btn-dark">Открыть Django Admin</a>
+    <a href="/admin/" class="btn btn-dark"><i class="bi bi-gear"></i> Django Admin</a>
+    <a href="{% url 'schema-swagger-ui' %}" class="btn btn-outline-dark ms-2">API Swagger</a>
 </div>
 {% endblock %}

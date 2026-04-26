@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Команды (управление) — UniSport{% endblock %}
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">Команды</h1>
+    <a href="{% url 'leagues:team_create' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Создать</a>
+</div>
+
+<form class="card mb-4" method="get">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label small">Поиск</label>
+            <input type="text" name="q" class="form-control form-control-sm" value="{{ request.GET.q }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary">Фильтр</button>
+        </div>
+    </div>
+</form>
+
+<div class="table-responsive card">
+    <table class="table mb-0">
+        <thead><tr><th>Команда</th><th>Переименовать</th><th>Факультет</th><th>Тренер</th><th>Назначить тренера</th><th>Игроков</th><th></th></tr></thead>
+        <tbody>
+        {% for t in teams %}
+            <tr>
+                <td><a href="{% url 'leagues:team_detail' t.pk %}">{{ t.name }}</a></td>
+                <td style="min-width: 16rem;">
+                    <form method="post" class="d-flex gap-1 align-items-center m-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="rename_team_id" value="{{ t.pk }}">
+                        <input type="text" name="new_team_name" class="form-control form-control-sm" value="{{ t.name }}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Ок</button>
+                    </form>
+                </td>
+                <td>{{ t.get_faculty_display }}</td>
+                <td>{% if t.captain %}{{ t.captain.username }}{% else %}—{% endif %}</td>
+                <td style="min-width: 14rem;">
+                    <form method="post" class="d-flex flex-wrap gap-1 align-items-center m-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="assign_coach_team" value="{{ t.pk }}">
+                        <select name="coach_user_id" class="form-select form-select-sm flex-grow-1" style="min-width: 8rem;">
+                            <option value="">— пользователь —</option>
+                            {% for u in assignable_users %}
+                            <option value="{{ u.pk }}" {% if t.captain_id == u.pk %}selected{% endif %}>{{ u.username }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary text-nowrap">Сохранить</button>
+                    </form>
+                </td>
+                <td>{{ t.player_count }}</td>
+                <td class="text-end">
+                    <form method="post" class="m-0" onsubmit="return confirm('Удалить команду?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_team_id" value="{{ t.pk }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7" class="text-muted">Нет команд</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}">Назад</a></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}">Далее</a></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}

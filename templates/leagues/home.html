@@ -1,37 +1,91 @@
 {% extends "base.html" %}
 
-{% block title %}Главная - UniSport{% endblock %}
+{% block title %}Главная — UniSport{% endblock %}
 
 {% block content %}
-<div class="p-4 p-md-5 mb-4 bg-white rounded-3 shadow-sm">
-    <h1 class="display-6">UniSport</h1>
-    <p class="lead mb-0">Платформа управления студенческими спортивными лигами.</p>
+<section class="us-hero">
+    <div class="us-hero__glow" aria-hidden="true"></div>
+    <div class="position-relative">
+        <p class="us-kicker"><i class="bi bi-lightning-charge-fill"></i> Студенческий спорт</p>
+        <h1 class="display-5 mb-3">UniSport</h1>
+        <p class="lead mb-4">Лиги, расписание и статистика в одном месте — для игроков, тренеров и организаторов.</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'leagues:league_list' %}" class="btn btn-primary"><i class="bi bi-grid-3x3-gap"></i> Все лиги</a>
+            <a href="{% url 'leagues:match_schedule' %}" class="btn btn-outline-primary"><i class="bi bi-calendar-week"></i> Расписание</a>
+        </div>
+    </div>
+</section>
+
+<div class="us-stats">
+    <div class="us-stat">
+        <div class="us-stat__value">{{ stat_active_leagues }}</div>
+        <div class="us-stat__label">Активных лиг</div>
+    </div>
+    <div class="us-stat">
+        <div class="us-stat__value">{{ stat_teams }}</div>
+        <div class="us-stat__label">Команд в системе</div>
+    </div>
+    <div class="us-stat">
+        <div class="us-stat__value">{{ stat_upcoming }}</div>
+        <div class="us-stat__label">Предстоящих матчей</div>
+    </div>
 </div>
 
 {% if user.is_authenticated %}
-<div class="row g-3">
-    <div class="col-12">
-        <div class="alert alert-secondary">Вы вошли как: <strong>{{ user.username }}</strong></div>
-    </div>
-    {% if user.is_staff or user.is_superuser %}
-        <div class="col-12 col-md-6">
-            <a href="{% url 'leagues:role_admin' %}" class="btn btn-dark w-100">Кабинет администратора</a>
-        </div>
+<div class="row g-3 us-role-grid mb-4">
+    {% if user_role == "MANAGER" %}
+        <div class="col-6 col-md-3"><a href="{% url 'leagues:role_manager' %}" class="btn btn-primary w-100"><i class="bi bi-clipboard-check"></i> Менеджер</a></div>
     {% endif %}
-    <div class="col-12 col-md-6">
-        <a href="{% url 'leagues:role_manager' %}" class="btn btn-primary w-100">Кабинет менеджера</a>
-    </div>
-    <div class="col-12 col-md-6">
-        <a href="{% url 'leagues:role_captain' %}" class="btn btn-warning w-100">Кабинет капитана</a>
-    </div>
-    <div class="col-12 col-md-6">
-        <a href="{% url 'leagues:role_player' %}" class="btn btn-success w-100">Кабинет игрока</a>
-    </div>
+    {% if user_role == "COACH" %}
+        <div class="col-6 col-md-3"><a href="{% url 'leagues:role_coach' %}" class="btn btn-warning w-100 text-dark"><i class="bi bi-star-fill"></i> Тренер</a></div>
+    {% endif %}
+    {% if user_role == "PLAYER" %}
+        <div class="col-6 col-md-3"><a href="{% url 'leagues:role_player' %}" class="btn btn-success w-100"><i class="bi bi-person-fill"></i> Игрок</a></div>
+    {% endif %}
 </div>
-{% else %}
-<div class="d-flex gap-2">
-    <a href="{% url 'login' %}" class="btn btn-primary">Войти</a>
-    <a href="{% url 'leagues:register' %}" class="btn btn-outline-primary">Регистрация</a>
+{% endif %}
+
+{% if active_leagues %}
+<div class="us-page-head">
+    <h2 class="h4 mb-0">Активные лиги</h2>
+    <a href="{% url 'leagues:league_list' %}" class="small">Все лиги →</a>
+</div>
+<div class="row g-3 mb-4">
+    {% for league in active_leagues %}
+    <div class="col-md-4">
+        <div class="card us-league-card h-100">
+            <div class="card-body">
+                <div class="sport-icon"><i class="bi bi-trophy"></i></div>
+                <h3 class="h5 card-title mb-2">{{ league.get_sport_display }}</h3>
+                <p class="text-muted small mb-3">Сезон {{ league.season }}</p>
+                <a href="{% url 'leagues:league_detail' league.pk %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if upcoming_matches %}
+<div class="us-page-head">
+    <h2 class="h4 mb-0">Ближайшие матчи</h2>
+    <a href="{% url 'leagues:match_schedule' %}" class="small">Полное расписание →</a>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+            <thead><tr><th>Дата</th><th>Матч</th><th>Место</th></tr></thead>
+            <tbody>
+            {% for m in upcoming_matches %}
+                <tr>
+                    <td class="text-nowrap">{{ m.date_time|date:"d.m.Y H:i" }}</td>
+                    <td><a href="{% url 'leagues:match_detail' m.pk %}">{{ m.home_team }} <span class="text-muted">vs</span> {{ m.away_team }}</a></td>
+                    <td>{{ m.location }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endif %}
 {% endblock %}

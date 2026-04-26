@@ -1,18 +1,33 @@
 {% extends "base.html" %}
 
-{% block title %}Вход - UniSport{% endblock %}
+{% block title %}Вход — UniSport{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center py-4">
     <div class="col-12 col-md-6 col-lg-4">
-        <div class="card shadow-sm">
+        <div class="card us-auth-card shadow-sm">
             <div class="card-body">
-                <h1 class="h4 mb-3">Вход в систему</h1>
-                <form method="post">
+                <h1 class="h4 mb-1">Вход</h1>
+                <p class="text-muted small mb-4">Войдите по логину и паролю</p>
+                <form method="post" novalidate>
                     {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary w-100">Войти</button>
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors.0 }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary w-100 mb-3">Войти</button>
                 </form>
+                <p class="text-center small mb-1"><a href="{% url 'password_reset' %}">Забыли пароль?</a></p>
+                <p class="text-center text-muted small mb-0">Нет аккаунта? <a href="{% url 'leagues:register' %}">Регистрация</a></p>
             </div>
         </div>
     </div>

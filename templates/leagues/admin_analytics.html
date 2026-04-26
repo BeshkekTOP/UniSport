@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Аналитика — UniSport{% endblock %}
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">Аналитические отчёты</h1>
+    <a href="{% url 'leagues:role_admin' %}" class="btn btn-sm btn-outline-secondary">Панель администратора</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Активность по факультетам</h5></div>
+            <div class="card-body">
+                <div class="d-flex gap-2 mb-3">
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'leagues:admin_analytics' %}?type=faculty&format=csv">CSV</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'leagues:admin_analytics' %}?type=faculty&format=pdf">PDF</a>
+                </div>
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Факультет</th><th>Команды</th><th>Игроки</th></tr></thead>
+                    <tbody>
+                    {% for r in faculty_report %}
+                        <tr><td>{{ r.faculty_label }}</td><td>{{ r.teams }}</td><td>{{ r.players }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Статистика матчей</h5></div>
+            <div class="card-body">
+                <div class="d-flex gap-2 mb-3">
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'leagues:admin_analytics' %}?type=matches&format=csv">CSV</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'leagues:admin_analytics' %}?type=matches&format=pdf">PDF</a>
+                </div>
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Вид спорта</th><th>Проведено матчей</th></tr></thead>
+                    <tbody>
+                    {% for r in match_report %}
+                        <tr><td>{{ r.sport_label }}</td><td>{{ r.matches }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Импорт CSV</h5></div>
+            <div class="card-body">
+                <p class="text-muted small">Формат: `name,faculty,league_id`</p>
+                <form method="post" action="{% url 'leagues:admin_import_csv' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="file" name="csv_file" class="form-control mb-2" accept=".csv" required>
+                    <button type="submit" class="btn btn-primary btn-sm">Импортировать команды</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Backup / Restore БД</h5></div>
+            <div class="card-body">
+                <a href="{% url 'leagues:admin_backup' %}" class="btn btn-outline-light btn-sm mb-3">Скачать backup (JSON)</a>
+                <form method="post" action="{% url 'leagues:admin_restore' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="file" name="backup_file" class="form-control mb-2" accept=".json" required>
+                    <button type="submit" class="btn btn-outline-warning btn-sm">Восстановить из backup</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

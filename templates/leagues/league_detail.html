@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}{{ league }} — UniSport{% endblock %}
+
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">{{ league.get_sport_display }} — {{ league.season }}</h1>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge {% if league.status == 'ACTIVE' %}bg-success{% elif league.status == 'PLANNING' %}bg-warning text-dark{% else %}bg-secondary{% endif %} fs-6">
+            {{ league.get_status_display }}
+        </span>
+        {% if user_role == "ADMIN" or user == league.manager %}
+            <form method="post" action="{% url 'leagues:league_status' league.pk %}" class="d-flex gap-1 align-items-center">
+                {% csrf_token %}
+                <select name="status" class="form-select form-select-sm" style="width:auto;">
+                    {% for val, label in status_choices %}
+                        <option value="{{ val }}" {% if league.status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-primary">Сменить</button>
+            </form>
+        {% endif %}
+        {% if user_role == "ADMIN" %}
+            <a href="{% url 'leagues:league_edit' league.pk %}" class="btn btn-sm btn-outline-secondary">Редактировать</a>
+            <a href="{% url 'leagues:league_delete' league.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+        {% endif %}
+    </div>
+</div>
+<p class="text-muted mb-4">Менеджер: {{ league.manager.username }}</p>
+
+{% if pending_join_requests %}
+<div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header"><h5 class="mb-0">Заявки в ваши команды</h5></div>
+    <div class="card-body">
+        {% for jr in pending_join_requests %}
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                <div>
+                    <strong><a href="{% url 'leagues:player_detail' jr.user.pk %}">{{ jr.user.get_full_name|default:jr.user.username }}</a></strong>
+                    <span class="text-muted">→</span> {{ jr.team.name }}
+                </div>
+                <form method="post" action="{% url 'leagues:join_request_decide' jr.pk %}" class="d-flex gap-1">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="approve" class="btn btn-sm btn-success">Принять</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-secondary">Отклонить</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Турнирная таблица -->
+{% if standings %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header"><h5 class="mb-0">Турнирная таблица</h5></div>
+    <div class="table-responsive">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>#</th><th>Команда</th><th>И</th><th>В</th><th>П</th><th>Очки</th></tr></thead>
+            <tbody>
+            {% for s in standings %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><a href="{% url 'leagues:team_detail' s.team.pk %}">{{ s.team.name }}</a></td>
+                    <td>{{ s.played }}</td>
+                    <td>{{ s.wins }}</td>
+                    <td>{{ s.losses }}</td>
+                    <td><strong>{{ s.points }}</strong></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Матчи -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Матчи</h5>
+        {% if user_role == "ADMIN" or user == league.manager %}
+            <a href="{% url 'leagues:match_create' %}?league={{ league.pk }}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Новый матч</a>
+        {% endif %}
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>Дата</th><th>Матч</th><th>Место</th><th>Счёт</th><th>Статус</th></tr></thead>
+            <tbody>
+            {% for m in matches %}
+                <tr>
+                    <td>{{ m.date_time|date:"d.m.Y H:i" }}</td>
+                    <td><a href="{% url 'leagues:match_detail' m.pk %}">{{ m.home_team }} vs {{ m.away_team }}</a></td>
+                    <td>{{ m.location }}</td>
+                    <td>{% if m.score_home is not None %}{{ m.score_home }}:{{ m.score_away }}{% else %}—{% endif %}</td>
+                    <td>{{ m.get_status_display }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-muted text-center">Матчей нет</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Команды -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Команды в лиге</h5>
+        {% if user_role == "ADMIN" or user == league.manager %}
+            <a href="{% url 'leagues:team_create' %}?league={{ league.pk }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-plus-lg"></i> Новая команда
+            </a>
+        {% endif %}
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for t in teams %}
+            <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div>
+                    <a href="{% url 'leagues:team_detail' t.pk %}">{{ t.name }}</a>
+                    <span class="text-muted small ms-2">({{ t.get_faculty_display }})</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if user_role == "ADMIN" or user == league.manager %}
+                        <a href="{% url 'leagues:team_edit' t.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+                        <a href="{% url 'leagues:team_delete' t.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                    {% endif %}
+                    {% if user_role == "PLAYER" and not user_in_league %}
+                        {% if my_join_request and my_join_request.team_id == t.id and my_join_request.status == "PENDING" %}
+                            <span class="badge bg-secondary">Заявка отправлена</span>
+                        {% else %}
+                            <form method="post" action="{% url 'leagues:team_apply' league.pk t.pk %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Подать заявку</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">Команды не добавлены</li>
+        {% endfor %}
+    </ul>
+    {% if user_role == "PLAYER" and user_in_league %}
+        <div class="card-body small text-muted">Вы уже состоите в команде этой лиги.</div>
+    {% endif %}
+</div>
+
+{% if course_sections %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header"><h6 class="mb-0">Разделы лиги по курсам</h6></div>
+    <div class="card-body">
+        {% for course, teams_in_course in course_sections.items %}
+            <div class="mb-2">
+                <strong>{{ course }}:</strong>
+                {% for t in teams_in_course %}
+                    <a href="{% url 'leagues:team_detail' t.pk %}">{{ t.name }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Объявления -->
+{% if user_role == "ADMIN" or user == league.manager %}
+<div class="mb-3">
+    <a href="{% url 'leagues:announcement_create' %}?league={{ league.pk }}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-megaphone"></i> Добавить объявление
+    </a>
+</div>
+{% endif %}
+{% if announcements %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header"><h5 class="mb-0">Объявления</h5></div>
+    <div class="card-body">
+        {% for a in announcements %}
+            <div class="mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                <h6>{{ a.title }}</h6>
+                <p class="mb-1">{{ a.text }}</p>
+                <small class="text-muted">{{ a.author.username }}, {{ a.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

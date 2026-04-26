@@ -1,31 +1,96 @@
 {% extends "base.html" %}
-
-{% block title %}Игрок - UniSport{% endblock %}
+{% block title %}Игрок — UniSport{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4">Панель игрока</h1>
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h2 class="h5">Мои команды</h2>
-        <ul class="mb-0">
-            {% for team in my_teams %}
-                <li>{{ team.name }} ({{ team.get_faculty_display }})</li>
-            {% empty %}
-                <li class="text-muted">Вы пока не состоите в командах.</li>
-            {% endfor %}
-        </ul>
-    </div>
+<div class="us-page-head mb-4">
+    <h1 class="h3 mb-0">Панель игрока</h1>
 </div>
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h2 class="h5">Мои предстоящие матчи</h2>
-        <ul class="mb-0">
-            {% for match in my_matches %}
-                <li>{{ match.date_time|date:"d.m.Y H:i" }} - {{ match.home_team }} vs {{ match.away_team }}</li>
-            {% empty %}
-                <li class="text-muted">Матчей нет.</li>
-            {% endfor %}
-        </ul>
+<div class="mb-3">
+    <a href="{% url 'leagues:league_list' %}" class="btn btn-outline-primary btn-sm">Выбрать лигу и подать заявку в команду</a>
+</div>
+
+{% if my_join_requests %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header"><h5 class="mb-0">Мои заявки в команды</h5></div>
+    <ul class="list-group list-group-flush">
+        {% for req in my_join_requests %}
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <strong>{{ req.team.name }}</strong>
+                    <span class="text-muted">— {{ req.league }}</span>
+                </div>
+                <form method="post" action="{% url 'leagues:join_request_cancel' req.pk %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Отменить заявку</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Мои команды</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for team in my_teams %}
+                    <li class="list-group-item">
+                        <a href="{% url 'leagues:team_detail' team.pk %}">{{ team.name }}</a>
+                        <small class="text-muted d-block">{{ team.get_faculty_display }}</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Вы пока не состоите в командах.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header"><h5 class="mb-0">Предстоящие матчи</h5></div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Дата</th><th>Матч</th><th>Место</th></tr></thead>
+                    <tbody>
+                    {% for m in my_matches %}
+                        <tr>
+                            <td>{{ m.date_time|date:"d.m.Y H:i" }}</td>
+                            <td><a href="{% url 'leagues:match_detail' m.pk %}">{{ m.home_team }} vs {{ m.away_team }}</a></td>
+                            <td>{{ m.location }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="text-muted text-center">Матчей нет.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if recent_results %}
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Последние результаты</h5></div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead><tr><th>Дата</th><th>Матч</th><th>Счёт</th><th></th></tr></thead>
+                    <tbody>
+                    {% for m in recent_results %}
+                        <tr>
+                            <td>{{ m.date_time|date:"d.m.Y" }}</td>
+                            <td><a href="{% url 'leagues:match_detail' m.pk %}">{{ m.home_team }} vs {{ m.away_team }}</a></td>
+                            <td>{{ m.score_home }}:{{ m.score_away }}</td>
+                            <td>
+                                {% if m.pk in votable_match_ids %}
+                                    <a href="{% url 'leagues:match_detail' m.pk %}" class="btn btn-sm btn-outline-success">Проголосовать</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

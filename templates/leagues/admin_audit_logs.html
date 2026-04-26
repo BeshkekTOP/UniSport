@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Логи действий — UniSport{% endblock %}
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">Логи действий пользователей</h1>
+    <a href="{% url 'leagues:role_admin' %}" class="btn btn-sm btn-outline-secondary">Панель администратора</a>
+</div>
+<form class="card mb-3" method="get">
+    <div class="card-body d-flex gap-2 align-items-end">
+        <div class="flex-grow-1">
+            <label class="form-label small">Поиск (путь, метод, пользователь)</label>
+            <input type="text" class="form-control form-control-sm" name="q" value="{{ request.GET.q }}">
+        </div>
+        <button class="btn btn-sm btn-primary" type="submit">Фильтр</button>
+    </div>
+</form>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>Время</th><th>Пользователь</th><th>Метод</th><th>Путь</th><th>Код</th><th>IP</th></tr></thead>
+            <tbody>
+            {% for l in logs %}
+                <tr>
+                    <td>{{ l.created_at|date:"d.m.Y H:i:s" }}</td>
+                    <td>{% if l.user %}{{ l.user.username }}{% else %}<span class="text-muted">anon</span>{% endif %}</td>
+                    <td>{{ l.method }}</td>
+                    <td>{{ l.path }}</td>
+                    <td>{{ l.status_code }}</td>
+                    <td>{{ l.ip|default:"—" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-muted text-center">Логов нет</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% if is_paginated %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}">Назад</a></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}">Далее</a></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}

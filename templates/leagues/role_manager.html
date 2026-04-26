@@ -1,31 +1,70 @@
 {% extends "base.html" %}
-
-{% block title %}Менеджер - UniSport{% endblock %}
+{% block title %}Менеджер — UniSport{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4">Панель менеджера</h1>
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h2 class="h5">Мои лиги</h2>
-        <ul class="mb-0">
-            {% for league in my_leagues %}
-                <li>{{ league.get_sport_display }} - {{ league.season }} ({{ league.get_status_display }})</li>
-            {% empty %}
-                <li class="text-muted">Лиги не назначены.</li>
-            {% endfor %}
-        </ul>
+<div class="us-page-head mb-4">
+    <h1 class="h3 mb-0">Панель менеджера</h1>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><a href="{% if primary_league %}{% url 'leagues:match_create' %}?league={{ primary_league.pk }}{% else %}{% url 'leagues:match_create' %}{% endif %}" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Создать матч</a></div>
+    <div class="col-md-4"><a href="{% if primary_league %}{% url 'leagues:announcement_create' %}?league={{ primary_league.pk }}{% else %}{% url 'leagues:announcement_create' %}{% endif %}" class="btn btn-outline-primary w-100"><i class="bi bi-megaphone"></i> Объявление</a></div>
+    <div class="col-md-4"><a href="{% url 'leagues:export_matches' %}" class="btn btn-outline-secondary w-100"><i class="bi bi-download"></i> Экспорт CSV</a></div>
+    <div class="col-md-4"><a href="{% url 'leagues:manager_coach_assign' %}" class="btn btn-outline-warning w-100 text-dark"><i class="bi bi-person-badge"></i> Тренеры</a></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Мои лиги</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for l in my_leagues %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <a href="{% url 'leagues:league_detail' l.pk %}">{{ l.get_sport_display }} — {{ l.season }}</a>
+                        <span class="badge {% if l.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">{{ l.get_status_display }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Лиги не назначены.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header"><h5 class="mb-0">Ближайшие матчи</h5></div>
+            <ul class="list-group list-group-flush">
+                {% for m in upcoming_matches %}
+                    <li class="list-group-item">
+                        <a href="{% url 'leagues:match_detail' m.pk %}">{{ m.home_team }} vs {{ m.away_team }}</a>
+                        <small class="text-muted d-block">{{ m.date_time|date:"d.m.Y H:i" }} — {{ m.location }}</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Матчей нет.</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h2 class="h5">Ближайшие матчи</h2>
-        <ul class="mb-0">
-            {% for match in upcoming_matches %}
-                <li>{{ match.date_time|date:"d.m.Y H:i" }} - {{ match.home_team }} vs {{ match.away_team }}</li>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-header"><h5 class="mb-0">Сетка матчей (дата/время)</h5></div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>Дата</th><th>Время</th><th>Матч</th><th>Лига</th><th>Статус</th></tr></thead>
+            <tbody>
+            {% for m in manager_match_grid %}
+                <tr>
+                    <td>{{ m.date_time|date:"d.m.Y" }}</td>
+                    <td>{{ m.date_time|date:"H:i" }}</td>
+                    <td><a href="{% url 'leagues:match_detail' m.pk %}">{{ m.home_team }} vs {{ m.away_team }}</a></td>
+                    <td>{{ m.league.get_sport_display }} / {{ m.league.season }}</td>
+                    <td>{{ m.get_status_display }}</td>
+                </tr>
             {% empty %}
-                <li class="text-muted">Матчей пока нет.</li>
+                <tr><td colspan="5" class="text-muted text-center">Матчей нет</td></tr>
             {% endfor %}
-        </ul>
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

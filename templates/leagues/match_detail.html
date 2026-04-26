@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}{{ match }} — UniSport{% endblock %}
+
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">{{ match.home_team }} <span class="text-muted fw-normal">vs</span> {{ match.away_team }}</h1>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5><a href="{% url 'leagues:team_detail' match.home_team.pk %}">{{ match.home_team }}</a></h5>
+                        <small class="text-muted">Хозяева</small>
+                    </div>
+                    <div class="col-auto">
+                        {% if match.score_home is not None %}
+                            <span class="display-5 fw-bold us-scoreboard">{{ match.score_home }} : {{ match.score_away }}</span>
+                        {% else %}
+                            <span class="display-5 text-muted">— : —</span>
+                        {% endif %}
+                    </div>
+                    <div class="col">
+                        <h5><a href="{% url 'leagues:team_detail' match.away_team.pk %}">{{ match.away_team }}</a></h5>
+                        <small class="text-muted">Гости</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <p><i class="bi bi-calendar"></i> {{ match.date_time|date:"d.m.Y H:i" }}</p>
+                <p><i class="bi bi-geo-alt"></i> {{ match.location }}</p>
+                <p>
+                    <i class="bi bi-flag"></i>
+                    <span class="badge {% if match.status == 'COMPLETED' %}bg-secondary{% elif match.status == 'IN_PROGRESS' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                        {{ match.get_status_display }}
+                    </span>
+                </p>
+                {% if match.league %}
+                    <p><i class="bi bi-trophy"></i> <a href="{% url 'leagues:league_detail' match.league.pk %}">{{ match.league }}</a></p>
+                {% endif %}
+                {% if can_manage_match %}
+                    <form method="post" action="{% url 'leagues:match_status' match.pk %}" class="d-flex gap-2 mb-2">
+                        {% csrf_token %}
+                        {% if match.status == "SCHEDULED" %}
+                            <button type="submit" name="action" value="start" class="btn btn-sm btn-outline-warning">Начать матч</button>
+                        {% endif %}
+                        {% if match.status != "COMPLETED" %}
+                            <button type="submit" name="action" value="finish" class="btn btn-sm btn-outline-success">Завершить матч</button>
+                        {% endif %}
+                    </form>
+                {% endif %}
+                {% if user_role == "ADMIN" %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'leagues:match_edit' match.pk %}" class="btn btn-sm btn-outline-secondary">Редактировать матч</a>
+                        <a href="{% url 'leagues:match_delete' match.pk %}" class="btn btn-sm btn-outline-danger">Удалить матч</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Result form for manager -->
+{% if can_manage_match %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header"><h5 class="mb-0">Управление матчем</h5></div>
+    <div class="card-body">
+        <form method="post" action="{% url 'leagues:match_result' match.pk %}" class="row g-2 align-items-end">
+            {% csrf_token %}
+            <div class="col-auto">
+                <label class="form-label">{{ match.home_team }}</label>
+                <input type="number" name="score_home" min="0" class="form-control" required>
+            </div>
+            <div class="col-auto pt-4 fw-bold">:</div>
+            <div class="col-auto">
+                <label class="form-label">{{ match.away_team }}</label>
+                <input type="number" name="score_away" min="0" class="form-control" required>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Обновить счёт</button>
+            </div>
+        </form>
+        <hr>
+        <h6 class="mb-3">Добавить гол в таймлайн</h6>
+        <form method="post" action="{% url 'leagues:match_goal_create' match.pk %}" class="row g-2 align-items-end">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <label class="form-label">{{ goal_form.scorer.label }}</label>
+                {{ goal_form.scorer }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{{ goal_form.minute.label }}</label>
+                {{ goal_form.minute }}
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary w-100">Добавить гол</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Participation confirmations -->
+{% if participations %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header"><h5 class="mb-0">Подтверждение участия</h5></div>
+    <ul class="list-group list-group-flush">
+        {% for p in participations %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ p.team.name }}</span>
+                {% if p.confirmed %}
+                    <span class="badge bg-success">Подтверждено ({{ p.confirmed_by.username }})</span>
+                {% else %}
+                    {% if user == p.team.captain %}
+                        <form method="post" action="{% url 'leagues:confirm_participation' p.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-warning">Подтвердить участие</button>
+                        </form>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Ожидает</span>
+                    {% endif %}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Attendance management for coach -->
+{% if user_role == "COACH" and match.status == "SCHEDULED" %}
+    {% for p in participations %}
+        {% if user == p.team.captain %}
+            <div class="mt-3">
+                <a href="{% url 'leagues:manage_attendance' match.pk p.team.pk %}" class="btn btn-outline-warning">
+                    <i class="bi bi-people"></i> Управление составом ({{ p.team.name }})
+                </a>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<!-- Attendance list -->
+{% if attendances %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header"><h5 class="mb-0">Состав игроков</h5></div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>Игрок</th><th>Команда</th><th>Статус</th></tr></thead>
+            <tbody>
+            {% for a in attendances %}
+                <tr>
+                    <td>{{ a.player.get_full_name|default:a.player.username }}</td>
+                    <td>{{ a.team.name }}</td>
+                    <td>
+                        {% if a.status == "PRESENT" %}<span class="badge bg-success">Присутствует</span>
+                        {% elif a.status == "ABSENT" %}<span class="badge bg-danger">Отсутствует</span>
+                        {% elif a.status == "INJURY" %}<span class="badge bg-warning text-dark">Травма</span>
+                        {% elif a.status == "ACADEMIC" %}<span class="badge bg-info">Учёба</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if goal_events %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header"><h5 class="mb-0">Голы по минутам</h5></div>
+    <ul class="list-group list-group-flush">
+        {% for g in goal_events %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span><strong>{{ g.minute }}'</strong> — {{ g.scorer.get_full_name|default:g.scorer.username }}</span>
+                <span class="text-muted">{{ g.team.name }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if match.status == "COMPLETED" %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header"><h5 class="mb-0">MVP матча</h5></div>
+    <div class="card-body">
+        {% if mvp_player %}
+            <p class="mb-2">Лидер голосования: <strong>{{ mvp_player.get_full_name|default:mvp_player.username }}</strong> ({{ mvp_leader.votes }} голосов)</p>
+        {% else %}
+            <p class="mb-2 text-muted">Пока нет голосов за MVP.</p>
+        {% endif %}
+        {% if can_vote_mvp %}
+            <form method="post" action="{% url 'leagues:match_vote_mvp' match.pk %}" class="row g-2 align-items-end">
+                {% csrf_token %}
+                <div class="col-md-8">
+                    <label class="form-label">Выберите игрока</label>
+                    <select name="candidate_id" class="form-select">
+                        {% for p in mvp_candidates %}
+                            <option value="{{ p.pk }}" {% if my_mvp_vote and my_mvp_vote.candidate_id == p.pk %}selected{% endif %}>
+                                {{ p.get_full_name|default:p.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-outline-success w-100">Проголосовать</button>
+                </div>
+            </form>
+        {% elif user_role == "PLAYER" %}
+            <p class="mb-0 text-muted small">Голосование доступно только в течение 24 часов после завершения матча.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

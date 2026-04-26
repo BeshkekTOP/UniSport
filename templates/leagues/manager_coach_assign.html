@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Назначение тренеров — UniSport{% endblock %}
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">Назначение тренеров</h1>
+    <a href="{% url 'leagues:role_manager' %}" class="btn btn-sm btn-outline-secondary">Панель менеджера</a>
+</div>
+<p class="text-muted">Выберите лигу, команду и пользователя, который станет тренером команды. Роль пользователя будет изменена на «Тренер», если у него была роль «Игрок».</p>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors.0 }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <p class="small text-muted">Подсказка: после выбора лиги список команд обновится автоматически.</p>
+                    <button type="submit" class="btn btn-primary">Назначить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(() => {
+    const leagueSelect = document.getElementById("id_league");
+    const teamSelect = document.getElementById("id_team");
+    if (!leagueSelect || !teamSelect) return;
+
+    const currentTeam = teamSelect.value;
+
+    const renderOptions = (teams) => {
+        teamSelect.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "---------";
+        teamSelect.appendChild(placeholder);
+        teams.forEach((team) => {
+            const option = document.createElement("option");
+            option.value = String(team.id);
+            option.textContent = team.name;
+            if (currentTeam && String(team.id) === String(currentTeam)) {
+                option.selected = true;
+            }
+            teamSelect.appendChild(option);
+        });
+    };
+
+    const urlPattern = "{% url 'leagues:manager_league_teams' 0 %}";
+    const loadTeams = async () => {
+        const leagueId = leagueSelect.value;
+        if (!leagueId) {
+            renderOptions([]);
+            return;
+        }
+        try {
+            const response = await fetch(urlPattern.replace("/0/", `/${leagueId}/`), {
+                headers: {"X-Requested-With": "XMLHttpRequest"},
+            });
+            if (!response.ok) throw new Error("request failed");
+            const data = await response.json();
+            renderOptions(data.teams || []);
+        } catch (e) {
+            console.error("Не удалось загрузить команды лиги", e);
+        }
+    };
+
+    leagueSelect.addEventListener("change", loadTeams);
+    loadTeams();
+})();
+</script>
+{% endblock %}

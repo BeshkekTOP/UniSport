@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ person.get_full_name|default:person.username }} — UniSport{% endblock %}
+{% block content %}
+<div class="us-page-head">
+    <h1 class="h3 mb-0">{{ person.get_full_name|default:person.username }}</h1>
+    {% if is_coach %}
+        <span class="badge bg-warning text-dark">Тренер</span>
+    {% else %}
+        <span class="badge bg-success">Игрок</span>
+    {% endif %}
+</div>
+<div class="card mb-4">
+    <div class="card-body">
+        {% if person.profile.photo %}
+            <img src="{{ person.profile.photo.url }}" alt="Фото" class="rounded mb-3" style="max-width: 160px; max-height: 160px; object-fit: cover;">
+        {% endif %}
+        <p class="mb-1"><strong>Логин:</strong> {{ person.username }}</p>
+        {% if person.email %}<p class="mb-1"><strong>Email:</strong> {{ person.email }}</p>{% endif %}
+        <p class="mb-0"><strong>Факультет:</strong> {{ display_faculty|default:"—" }}</p>
+        <p class="mb-0"><strong>Курс:</strong> {{ display_course|default:"—" }}</p>
+        <p class="mb-0"><strong>Возраст:</strong> {{ display_age|default:"—" }}</p>
+        {% if is_coach %}
+            <hr>
+            <p class="mb-2"><strong>Описание тренера:</strong></p>
+            <p class="text-muted mb-2">{{ coach_bio|default:"—" }}</p>
+            {% if can_edit_bio %}
+                <form method="post" action="{% url 'leagues:coach_bio_update' person.pk %}">
+                    {% csrf_token %}
+                    <textarea name="bio" class="form-control" rows="4" placeholder="Описание тренера">{{ coach_bio }}</textarea>
+                    <button type="submit" class="btn btn-sm btn-outline-primary mt-2">Сохранить описание</button>
+                </form>
+            {% endif %}
+        {% endif %}
+        <hr>
+        {% if not is_coach %}
+            <p class="mb-1"><strong>Голы:</strong> {{ goals_count }}</p>
+            <p class="mb-1"><strong>MVP (получено голосов):</strong> {{ mvp_count }}</p>
+            <p class="mb-0"><strong>Рейтинг:</strong> {{ rating_10 }} / 10</p>
+        {% endif %}
+    </div>
+</div>
+<div class="card">
+    <div class="card-header"><h5 class="mb-0">{% if is_coach %}Команды (тренер){% else %}Команды{% endif %}</h5></div>
+    <ul class="list-group list-group-flush">
+        {% for tm in member_teams %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{% url 'leagues:team_detail' tm.pk %}">{{ tm.name }}</a>
+                <span class="text-muted small">
+                    {% for l in tm.leagues.all %}
+                        {{ l.get_sport_display }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}—{% endfor %}
+                </span>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">Нет команд</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

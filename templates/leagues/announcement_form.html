@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Новое объявление — UniSport{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <h1 class="h3 mb-4">Новое объявление</h1>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if locked_league %}
+                        <div class="mb-3">
+                            <label class="form-label">Лига</label>
+                            <div class="form-control border-secondary bg-dark text-light">{{ locked_league }}</div>
+                            <input type="hidden" name="league" value="{{ locked_league.pk }}">
+                        </div>
+                    {% endif %}
+                    {% for field in form %}
+                        {% if not locked_league or field.name != "league" %}
+                            <div class="mb-3">
+                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100">Опубликовать</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

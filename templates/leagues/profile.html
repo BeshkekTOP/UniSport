@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Профиль — UniSport{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="us-page-head mb-4">
+            <h1 class="h3 mb-0">Профиль</h1>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header"><h5 class="mb-0">Личная информация</h5></div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Имя</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Фамилия</label>
+                                {{ form.last_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                {{ form.email }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Фото профиля</label>
+                                {{ form.photo }}
+                                {% if profile_photo %}
+                                    <div class="mt-2">
+                                        <img src="{{ profile_photo.url }}" alt="Фото профиля" class="rounded" style="max-width: 120px; max-height: 120px; object-fit: cover;">
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Факультет</label>
+                                {{ form.faculty }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Группа</label>
+                                {{ form.study_group }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Курс</label>
+                                {{ form.course }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Возраст</label>
+                                {{ form.age }}
+                            </div>
+                            {% if profile.role == "COACH" %}
+                            <div class="mb-3">
+                                <label class="form-label">Описание тренера</label>
+                                {{ form.bio }}
+                            </div>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header"><h5 class="mb-0">Аккаунт</h5></div>
+                    <div class="card-body">
+                        <p><strong>Логин:</strong> {{ user.username }}</p>
+                        <p><strong>Роль:</strong> {{ profile.get_role_display }}</p>
+                        <p><strong>Курс:</strong> {{ profile.get_course_display|default:"—" }}</p>
+                        <p><strong>Возраст:</strong> {{ profile.age|default:"—" }}</p>
+                        <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}</p>
+                        <a href="{% url 'password_change' %}" class="btn btn-outline-secondary btn-sm">Изменить пароль</a>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header"><h5 class="mb-0">Мои команды</h5></div>
+                    <ul class="list-group list-group-flush">
+                        {% for t in my_teams %}
+                            <li class="list-group-item">
+                                <a href="{% url 'leagues:team_detail' t.pk %}">{{ t.name }}</a>
+                                <span class="text-muted small">({{ t.get_faculty_display }})</span>
+                                {% if t.captain == user %}<span class="badge bg-warning text-dark ms-1">Тренер</span>{% endif %}
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">Не состоите в командах</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

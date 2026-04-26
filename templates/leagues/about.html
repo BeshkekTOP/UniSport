@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}О проекте — UniSport{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="us-page-head">
+            <h1 class="h3 mb-0">О проекте UniSport</h1>
+        </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <p>
+                    <strong>UniSport</strong> — это комплексная веб-платформа для организации и управления
+                    студенческими спортивными лигами в университете. Она автоматизирует все процессы —
+                    от регистрации команд и формирования расписания матчей до ввода результатов и анализа статистики.
+                </p>
+                <h5 class="mt-4">Возможности</h5>
+                <ul>
+                    <li>Управление лигами по видам спорта (баскетбол, футбол, волейбол, мини-футбол)</li>
+                    <li>Регистрация команд от факультетов</li>
+                    <li>Формирование расписания матчей</li>
+                    <li>Ввод результатов и автоматический подсчёт статистики</li>
+                    <li>Уведомления для участников о матчах и объявлениях</li>
+                    <li>Экспорт данных в CSV</li>
+                    <li>REST API для интеграций</li>
+                </ul>
+                <h5 class="mt-4">Роли пользователей</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100" style="border-color: var(--us-border) !important;">
+                            <h6><i class="bi bi-gear text-primary"></i> Администратор</h6>
+                            <small class="text-muted">Полный контроль: создание лиг, назначение менеджеров, аналитика.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100" style="border-color: var(--us-border) !important;">
+                            <h6><i class="bi bi-clipboard text-primary"></i> Менеджер лиги</h6>
+                            <small class="text-muted">Организация соревнований: расписание, результаты, объявления.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100" style="border-color: var(--us-border) !important;">
+                            <h6><i class="bi bi-star text-primary"></i> Тренер</h6>
+                            <small class="text-muted">Управление командой: подтверждение участия, состав игроков.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100" style="border-color: var(--us-border) !important;">
+                            <h6><i class="bi bi-person text-primary"></i> Игрок</h6>
+                            <small class="text-muted">Просмотр расписания, статистики, получение уведомлений.</small>
+                        </div>
+                    </div>
+                </div>
+                <h5 class="mt-4">Технологии</h5>
+                <p>Python, Django, PostgreSQL, Django REST Framework, Bootstrap 5.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
