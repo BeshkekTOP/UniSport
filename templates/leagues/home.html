@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Главная — UniSport{% endblock %}
+{% block title %}Главная — УниСпорт{% endblock %}
 
 {% block content %}
 <section class="us-hero">
     <div class="us-hero__glow" aria-hidden="true"></div>
     <div class="position-relative">
         <p class="us-kicker"><i class="bi bi-lightning-charge-fill"></i> Студенческий спорт</p>
-        <h1 class="display-5 mb-3">UniSport</h1>
+        <h1 class="display-5 mb-3">УниСпорт</h1>
         <p class="lead mb-4">Лиги, расписание и статистика в одном месте — для игроков, тренеров и организаторов.</p>
         <div class="d-flex flex-wrap gap-2">
             <a href="{% url 'leagues:league_list' %}" class="btn btn-primary"><i class="bi bi-grid-3x3-gap"></i> Все лиги</a>

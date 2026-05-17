@@ -1,4 +1,4 @@
-"""
+﻿"""
 URL configuration for unisport_project project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
